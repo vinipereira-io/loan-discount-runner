@@ -1,3 +1,5 @@
 from loan_calculator import calculate_expected_repayment_schedule
 
-print(calculate_expected_repayment_schedule(20000, 'fortnightly', 130, 0.30, '01/02/2024', '15/02/2024'))
+print('------------------------------------------------\nWelcome to DiscountRunner!\n------------------------------------------------')
+print('This program helps you simulate the impact of interest rate discounts in your loan.\nFollow the instructions to calculate your own scenarios:')
+
