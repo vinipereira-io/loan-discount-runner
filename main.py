@@ -1,6 +1,7 @@
 from loan_calculator import calculate_expected_repayment_schedule
 from datetime import datetime, timedelta
 from dateutil.parser import parse
+from tabulate import tabulate
 
 print('------------------------------------------------\nWelcome to DiscountRunner!\n------------------------------------------------')
 print('This program helps you simulate the impact of interest rate discounts in your loan.\nFollow the instructions to calculate your own scenarios:')
@@ -24,11 +25,11 @@ if term_in_months < 12 or term_in_months > 72:
 if repayment_frequency == 'monthly':
     number_of_repayments = term_in_months
 elif repayment_frequency == 'fortnightly':
-    number_of_repayments = round(term_in_months * (26 / 12), 0)
+    number_of_repayments = int(term_in_months * (26 / 12))
 elif repayment_frequency == 'weekly':
-    number_of_repayments = round(term_in_months * (52 / 12), 0)
+    number_of_repayments = int(term_in_months * (52 / 12))
 
-interest_rate = input('What interest rate are being charged per year? (min 25%; max 50% )').strip('%')
+interest_rate = input('What interest rate are being charged per year? (min 25%; max 50%) ').strip('%')
 interest_rate = float(interest_rate.strip('%')) / 100
 if interest_rate < 0.25 or interest_rate > 0.5:
     raise ValueError('Interest rate is out of acceptable range, it needs to be between 25 and 50% ')
@@ -45,6 +46,14 @@ if (first_repayment_date - establishment_date).days > 30:
 establishment_date = establishment_date.strftime('%d/%m/%Y')
 first_repayment_date = first_repayment_date.strftime('%d/%m/%Y')
 
-repayment = calculate_expected_repayment_schedule(loan_amount, repayment_frequency, number_of_repayments, interest_rate, establishment_date, first_repayment_date)['repayment_amount']
+loan_scenario = calculate_expected_repayment_schedule(loan_amount, repayment_frequency, number_of_repayments, interest_rate, establishment_date, first_repayment_date)
 
-print('Your repayment amount is: $' + str(repayment))
+print('Your repayment amount is: $' + str(loan_scenario['repayment_amount']))
+print('Calculating your repayment scenario...')
+
+repayment_schedule = loan_scenario['expected_repayment_schedule']
+
+headers = [x.capitalize().replace('_', ' ') for x in repayment_schedule[0].keys()]
+rows = [y.values() for y in repayment_schedule]
+
+print(tabulate(rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
