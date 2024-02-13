@@ -81,6 +81,7 @@ def calculate_expected_repayment_schedule(loan_amount, repayment_frequency, numb
                 'date': new_date.strftime('%d/%m/%Y'),
                 'opening_balance': prev_balance,
                 'repayment': round(last_repayment, 2),
+                'interest_rate': '{:.2%}'.format(interest_rate),
                 'interest': round(new_interest, 2),
                 'principal': round(last_principal, 2),
                 'closing_balance': round(prev_balance - last_principal, 2)
@@ -91,6 +92,7 @@ def calculate_expected_repayment_schedule(loan_amount, repayment_frequency, numb
                 'date': new_date.strftime('%d/%m/%Y'),
                 'opening_balance': prev_balance,
                 'repayment': abs(repayment),
+                'interest_rate': '{:.2%}'.format(interest_rate),
                 'interest': round(new_interest, 2),
                 'principal': round(new_principal, 2),
                 'closing_balance': round(prev_balance - new_principal, 2)
