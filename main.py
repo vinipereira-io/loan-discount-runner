@@ -55,10 +55,11 @@ loan_total_interest = sum(entry['interest'] for entry in loan_expected_schedule)
 
 print('Your repayment amount is: $' + str(loan_scenario['repayment_amount']) + '\n' + 
       'At the end of your loan you\'ll have paid $' + str(loan_total_repayment) + '\n' +
-      'From that amount, you\'ll have paid $' + str(loan_total_interest) + ' only in interest.')
+      'From that amount $' + str(loan_total_interest) + ' is interest.')
+
+repayment_schedule = loan_scenario['expected_repayment_schedule']
 
 if input('Do you want to see your full expected repayment schedule? (y/n) ').lower() == 'y':
-    repayment_schedule = loan_scenario['expected_repayment_schedule']
     headers = [x.capitalize().replace('_', ' ') for x in repayment_schedule[0].keys()]
     rows = [y.values() for y in repayment_schedule]
 
@@ -66,12 +67,45 @@ if input('Do you want to see your full expected repayment schedule? (y/n) ').low
 
 print('OK, now let\'s simulate your discounts...')
 discount_input = input('Enter all your discounts in the format "month # : discount in %" separated by comma (e.g. 2 : 0.50%, 5 : 0.25%...) ')
-discount_list = discount_input.replace(' ', '').split(',')
+discount_input = discount_input.replace(' ', '').split(',')
 
-discount_dict = {}
-for entry in discount_list:
+discount_list = []
+for entry in discount_input:
+    discount_dict = {}
     month, discount = entry.split(':')
     month = int(month.strip())
     discount = float(discount.strip().rstrip('%')) / 100
-    discount_dict[month] = discount
+    discount_dict['month'] = month
+    discount_dict['discount'] = discount
+    discount_list.append(discount_dict)
 
+current_repayment_schedule = repayment_schedule
+current_interest_rate = interest_rate
+for discount in discount_list:
+    schedule_before_discount = list(filter(lambda entry: entry['id'] <= discount['month'], current_repayment_schedule))
+
+    reference_entry = current_repayment_schedule[discount['month'] - 1]
+    current_balance = reference_entry['closing_balance']
+    remaining_repayments = len(current_repayment_schedule) - reference_entry['id']
+    current_interest_rate -= discount['discount']
+    effective_date = reference_entry['date']
+    next_repayment_date = current_repayment_schedule[discount['month']]['date']
+
+    discount_scenario = calculate_expected_repayment_schedule(current_balance, repayment_frequency, remaining_repayments, current_interest_rate, effective_date, next_repayment_date)
+    schedule_after_discount = discount_scenario['expected_repayment_schedule']
+
+    current_repayment_schedule = schedule_before_discount + schedule_after_discount
+    new_id = 0
+    for entry in current_repayment_schedule:
+        new_id += 1
+        entry['id'] = new_id
+
+discount_impact = round(loan_total_repayment - sum(entry['repayment'] for entry in current_repayment_schedule),2)
+
+print('You will save a total amount of $' + str(discount_impact) + ' with interest discounts.')
+
+if input('Do you want to see your updated repayment schedule? (y/n) ').lower() == 'y':
+    headers = [x.capitalize().replace('_', ' ') for x in current_repayment_schedule[0].keys()]
+    rows = [y.values() for y in current_repayment_schedule]
+
+    print(tabulate(rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
