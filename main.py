@@ -1,33 +1,81 @@
 from loan_calculator import calculate_expected_repayment_schedule
-from datetime import datetime, timedelta
-from dateutil.parser import parse
+from datetime import datetime
 from tabulate import tabulate
+
+class Loan:
+    def __init__(self, amount, interest_rate, repayment_frequency, number_of_repayments, establishment_date, first_repayment_date):
+        self.amount = amount
+        self.interest_rate = interest_rate
+        self.initial_interest_rate = interest_rate
+        self.repayment_frequency = repayment_frequency
+        self.number_of_repayments = number_of_repayments
+        self.establishment_date = establishment_date
+        self.first_repayment_date = first_repayment_date
+
+        initial_scenario = calculate_expected_repayment_schedule(self.amount, self.repayment_frequency, self.number_of_repayments, self.interest_rate, self.establishment_date, self.first_repayment_date)
+        
+        self.repayment_amount = initial_scenario['repayment_amount']
+        self.repayment_schedule = initial_scenario['expected_repayment_schedule']
+        self.initial_repayment_schedule = initial_scenario['expected_repayment_schedule']
+        self.repayment_total = sum(entry['repayment'] for entry in self.repayment_schedule)
+        self.initial_repayment_total = sum(entry['repayment'] for entry in self.repayment_schedule)
+        self.interest_total = sum(entry['interest'] for entry in self.repayment_schedule)
+        self.initial_interest_total = sum(entry['interest'] for entry in self.repayment_schedule)
+
+    def __repr__(self):
+        return 'Your repayment amount is: ${repayment}\nAt the end of your loan you\'ll have paid ${total}\nFrom that amount ${interest} is interest.'.format(repayment = self.repayment_amount, total = self.repayment_total, interest = self.interest_total)
+
+    def print_repayment_schedule(self, schedule):
+        headers = [x.capitalize().replace('_', ' ') for x in schedule[0].keys()]
+        rows = [y.values() for y in schedule]
+        print(tabulate(rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
+
+    def calculate_discount_impact(self, discount_list):
+        current_repayment_schedule = self.repayment_schedule
+        current_interest_rate = self.interest_rate
+        for discount in discount_list:
+            schedule_before_discount = list(filter(lambda entry: entry['id'] <= discount['month'], current_repayment_schedule))
+
+            reference_entry = current_repayment_schedule[discount['month'] - 1]
+            current_balance = reference_entry['closing_balance']
+            remaining_repayments = len(current_repayment_schedule) - reference_entry['id']
+            current_interest_rate -= discount['discount']
+            effective_date = reference_entry['date']
+            next_repayment_date = current_repayment_schedule[discount['month']]['date']
+
+            discount_scenario = calculate_expected_repayment_schedule(current_balance, self.repayment_frequency, remaining_repayments, current_interest_rate, effective_date, next_repayment_date)
+            schedule_after_discount = discount_scenario['expected_repayment_schedule']
+
+            current_repayment_schedule = schedule_before_discount + schedule_after_discount
+            new_id = 0
+            for entry in current_repayment_schedule:
+                new_id += 1
+                entry['id'] = new_id
+        self.interest_rate = current_interest_rate
+        self.repayment_schedule = current_repayment_schedule
+        self.repayment_total = sum(entry['repayment'] for entry in current_repayment_schedule)
+        self.interest_total = sum(entry['interest'] for entry in current_repayment_schedule)
+        discount_impact = round(self.initial_repayment_total - self.repayment_total,2)
+        return discount_impact
 
 print('------------------------------------------------\nWelcome to DiscountRunner!\n------------------------------------------------')
 print('This program helps you simulate the impact of interest rate discounts in your loan.\nFollow the instructions to calculate your own scenarios:')
+
+## Loan variables input
 
 loan_amount = input('How much are you borrowing? (in AUD; min 3000; max 50000) ')
 loan_amount = float(loan_amount)
 if loan_amount < 3000 or loan_amount > 50000:
     raise ValueError('Loan amount is out of acceptable range, it needs to be between 3,000 and 50,000')
 
-""" repayment_frequency = input('How often do you want to make payments on your loan? (monthly, fortnightly or weekly) ').lower()
-if repayment_frequency not in ['monthly', 'fortnightly', 'weekly']:
-    raise ValueError('Invalid frequency') """ 
 repayment_frequency = 'monthly' # Currently supporting monthly frequency only
-
 
 term_in_months = input('How long do you need to repay the loan? (in months; min 12; max 72) ')
 term_in_months = int(term_in_months)
 if term_in_months < 12 or term_in_months > 72:
     raise ValueError('Invalid term, it needs to be between 12 and 72 months')
 
-if repayment_frequency == 'monthly':
-    number_of_repayments = term_in_months
-elif repayment_frequency == 'fortnightly':
-    number_of_repayments = int(term_in_months * (26 / 12))
-elif repayment_frequency == 'weekly':
-    number_of_repayments = int(term_in_months * (52 / 12))
+number_of_repayments = term_in_months # Currently supporting monthly frequency only
 
 interest_rate = input('What interest rate are being charged per year? (min 25%; max 50%) ').strip('%')
 interest_rate = float(interest_rate.strip('%')) / 100
@@ -46,24 +94,18 @@ if (first_repayment_date - establishment_date).days > 30:
 establishment_date = establishment_date.strftime('%d/%m/%Y')
 first_repayment_date = first_repayment_date.strftime('%d/%m/%Y')
 
+## Loan creation
+
 print('Calculating your repayment scenario...')
 
-loan_scenario = calculate_expected_repayment_schedule(loan_amount, repayment_frequency, number_of_repayments, interest_rate, establishment_date, first_repayment_date)
-loan_expected_schedule = loan_scenario['expected_repayment_schedule']
-loan_total_repayment = sum(entry['repayment'] for entry in loan_expected_schedule)
-loan_total_interest = sum(entry['interest'] for entry in loan_expected_schedule)
+loan = Loan(loan_amount, interest_rate, repayment_frequency, number_of_repayments, establishment_date, first_repayment_date)
 
-print('Your repayment amount is: $' + str(loan_scenario['repayment_amount']) + '\n' + 
-      'At the end of your loan you\'ll have paid $' + str(loan_total_repayment) + '\n' +
-      'From that amount $' + str(loan_total_interest) + ' is interest.')
-
-repayment_schedule = loan_scenario['expected_repayment_schedule']
+print(loan)
 
 if input('Do you want to see your full expected repayment schedule? (y/n) ').lower() == 'y':
-    headers = [x.capitalize().replace('_', ' ') for x in repayment_schedule[0].keys()]
-    rows = [y.values() for y in repayment_schedule]
+    loan.print_repayment_schedule(loan.initial_repayment_schedule)
 
-    print(tabulate(rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
+## Discounts input
 
 print('OK, now let\'s simulate your discounts...')
 discount_input = input('Enter all your discounts in the format "month # : discount in %" separated by comma (e.g. 2 : 0.50%, 5 : 0.25%...) ')
@@ -79,33 +121,9 @@ for entry in discount_input:
     discount_dict['discount'] = discount
     discount_list.append(discount_dict)
 
-current_repayment_schedule = repayment_schedule
-current_interest_rate = interest_rate
-for discount in discount_list:
-    schedule_before_discount = list(filter(lambda entry: entry['id'] <= discount['month'], current_repayment_schedule))
-
-    reference_entry = current_repayment_schedule[discount['month'] - 1]
-    current_balance = reference_entry['closing_balance']
-    remaining_repayments = len(current_repayment_schedule) - reference_entry['id']
-    current_interest_rate -= discount['discount']
-    effective_date = reference_entry['date']
-    next_repayment_date = current_repayment_schedule[discount['month']]['date']
-
-    discount_scenario = calculate_expected_repayment_schedule(current_balance, repayment_frequency, remaining_repayments, current_interest_rate, effective_date, next_repayment_date)
-    schedule_after_discount = discount_scenario['expected_repayment_schedule']
-
-    current_repayment_schedule = schedule_before_discount + schedule_after_discount
-    new_id = 0
-    for entry in current_repayment_schedule:
-        new_id += 1
-        entry['id'] = new_id
-
-discount_impact = round(loan_total_repayment - sum(entry['repayment'] for entry in current_repayment_schedule),2)
+discount_impact = loan.calculate_discount_impact(discount_list)
 
 print('You will save a total amount of $' + str(discount_impact) + ' with interest discounts.')
 
 if input('Do you want to see your updated repayment schedule? (y/n) ').lower() == 'y':
-    headers = [x.capitalize().replace('_', ' ') for x in current_repayment_schedule[0].keys()]
-    rows = [y.values() for y in current_repayment_schedule]
-
-    print(tabulate(rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
+    loan.print_repayment_schedule(loan.repayment_schedule)
