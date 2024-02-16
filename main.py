@@ -79,7 +79,7 @@ while True:
 
     ## Loan variables input
 
-    loan_amount = input('How much are you borrowing? (in AUD; min 3000; max 50000) ')
+    loan_amount = input('Q: How much are you borrowing? (in AUD; min 3000; max 50000)\nA: ')
     loan_amount = float(loan_amount)
     if loan_amount < 3000 or loan_amount > 50000:
         raise ValueError('Loan amount is out of acceptable range, it needs to be between 3,000 and 50,000')
@@ -87,7 +87,7 @@ while True:
 
     repayment_frequency = 'monthly' # Currently supporting monthly frequency only
 
-    term_in_months = input('How long do you need to repay the loan? (in months; min 12; max 72) ')
+    term_in_months = input('Q: How long do you need to repay the loan? (in months; min 12; max 72)\nA: ')
     term_in_months = int(term_in_months)
     if term_in_months < 12 or term_in_months > 72:
         raise ValueError('Invalid term, it needs to be between 12 and 72 months')
@@ -95,17 +95,17 @@ while True:
 
     number_of_repayments = term_in_months # Currently supporting monthly frequency only
 
-    interest_rate = input('What interest rate are being charged per year? (min 25%; max 50%) ').strip('%')
+    interest_rate = input('Q: What interest rate are being charged per year? (min 25%; max 50%)\nA: ').strip('%')
     interest_rate = float(interest_rate.strip('%')) / 100
     if interest_rate < 0.25 or interest_rate > 0.5:
         raise ValueError('Interest rate is out of acceptable range, it needs to be between 25 and 50% ')
     clear_screen()
 
-    establishment_date = input('When was this loan funded? (dd/mm/yyyy) ')
+    establishment_date = input('Q: When was this loan funded? (dd/mm/yyyy)\nA: ')
     establishment_date = datetime.strptime(establishment_date, '%d/%m/%Y')
     clear_screen()
 
-    first_repayment_date = input('When do you want your first repayment to be? (max 30 days after establishment date; dd/mm/yyyy) ')
+    first_repayment_date = input('Q: When do you want your first repayment to be? (max 30 days after establishment date; dd/mm/yyyy)\nA: ')
     first_repayment_date = datetime.strptime(first_repayment_date, '%d/%m/%Y')
     if (first_repayment_date - establishment_date).days > 30:
         raise ValueError('First repayment date can\'t be after 30 days of funding')
@@ -122,44 +122,46 @@ while True:
     clear_screen()
 
     print(loan)
-
-    if input('Do you want to see your full expected repayment schedule? (y/n) ').lower() == 'y':
+    print()
+    if input('Q: Do you want to see your full expected repayment schedule? (y/n)\nA: ').lower() == 'y':
         clear_screen()
         loan.print_repayment_schedule(loan.initial_repayment_schedule)
     clear_screen()
 
     ## Discounts input
-
+    
     print('OK, now let\'s simulate your discounts...')
-    discount_input = input('Enter all your discounts in the format "month # : discount in %" separated by comma (e.g. 2 : 0.50%, 5 : 0.25%...) ')
-    clear_screen()
-
-    print('Recalculating your scenario...')
-    time.sleep(2)
-
-    discount_input = discount_input.replace(' ', '').split(',')
-
     discount_list = []
-    for entry in discount_input:
+    print()
+    while True:
+        discount_input = input('Q: Enter a discount in the format "month: discount%" (e.g. 2: 0.50%)\nA: ')
+        discount_input = discount_input.replace(' ', '').split(':')
+        month = int(discount_input[0].strip())
+        discount = float(discount_input[1].strip().rstrip('%')) / 100
         discount_dict = {}
-        month, discount = entry.split(':')
-        month = int(month.strip())
-        discount = float(discount.strip().rstrip('%')) / 100
         discount_dict['month'] = month
         discount_dict['discount'] = discount
         discount_list.append(discount_dict)
+        clear_screen()
+        if input('Q: Do you want to add another discount? (y/n)\nA: ').lower() == 'n':
+            clear_screen()
+            break
+        clear_screen()
+
+    print('Recalculating your scenario...')
+    time.sleep(2)
 
     discount_impact = loan.calculate_discount_impact(discount_list)
     clear_screen()
 
     print('You will save a total amount of $' + str(discount_impact) + ' with interest discounts.')
     print()
-    if input('Do you want to see your updated repayment schedule? (y/n) ').lower() == 'y':
+    if input('Q: Do you want to see your updated repayment schedule? (y/n)\nA: ').lower() == 'y':
         clear_screen()
         loan.print_repayment_schedule(loan.repayment_schedule)
     clear_screen()
 
-    if input('Do you want to simulate another scenario? (y/n) ').lower() != 'y':
+    if input('Q: Do you want to simulate another scenario? (y/n)\nA: ').lower() != 'y':
         clear_screen()
         print('Thank you for using DiscountRunner!')
         break ## Program stops
