@@ -29,12 +29,26 @@ class Loan:
         self.initial_interest_total = sum(entry['interest'] for entry in self.repayment_schedule)
 
     def __repr__(self):
-        return 'Your repayment amount is: ${repayment}\nAt the end of your loan you\'ll have paid ${total}\nFrom which ${interest} is interest.'.format(repayment = self.repayment_amount, total = self.repayment_total, interest = self.interest_total)
+        repayment_formatted = '${:,.2f}'.format(self.repayment_amount)
+        total_formatted = '${:,.2f}'.format(self.repayment_total)
+        interest_formatted = '${:,.2f}'.format(self.interest_total)
+        return 'Your repayment amount is: {}\nAt the end of your loan you\'ll have paid {}\nFrom which {} is interest.'.format(repayment_formatted, total_formatted, interest_formatted)
 
     def print_repayment_schedule(self, schedule):
         headers = [x.capitalize().replace('_', ' ') for x in schedule[0].keys()]
-        rows = [y.values() for y in schedule]
-        print(tabulate(rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
+        formatted_rows = []
+
+        for row in schedule:
+            formatted_row = []
+            for val in row.values():
+                if isinstance(val, float):
+                    formatted_val = '${:,.2f}'.format(val)
+                else:
+                    formatted_val = val
+                formatted_row.append(formatted_val)
+            formatted_rows.append(formatted_row)
+
+        print(tabulate(formatted_rows, headers, numalign = 'left', stralign = 'left', tablefmt = 'fancy_grid'))
         print()
         input('Press Enter to continue...')
         clear_screen()
@@ -67,9 +81,9 @@ class Loan:
         discount_impact = round(self.initial_repayment_total - self.repayment_total,2)
         return discount_impact
 
+clear_screen()
 while True:
     ## Program starts
-
     print('--------------------------\nWelcome to DiscountRunner!\n--------------------------')
     print()
     print('This program helps you simulate the impact of interest rate discounts in your loan.\nFollow the instructions to calculate your own scenarios.')
@@ -80,7 +94,7 @@ while True:
     ## Loan variables input
 
     loan_amount = input('Q: How much are you looking to borrow? (in AUD; minimum $3,000; maximum $50,000)\nA: ')
-    loan_amount = float(loan_amount)
+    loan_amount = float(loan_amount.replace(',',''))
     if loan_amount < 3000 or loan_amount > 50000:
         raise ValueError('Loan amount is out of acceptable range, it needs to be between 3,000 and 50,000')
     clear_screen()
@@ -154,7 +168,7 @@ while True:
     discount_impact = loan.calculate_discount_impact(discount_list)
     clear_screen()
 
-    print('You will save a total amount of $' + str(discount_impact) + ' with interest discounts.')
+    print('You will save a total amount of ' + '${:,.2f}'.format(discount_impact) + ' with interest discounts.')
     print()
     if input('Q: Would you like to see your updated repayment schedule? (y/n)\nA: ').lower() == 'y':
         clear_screen()
