@@ -1,1 +1,3 @@
-# loan-discount-runner
+# DiscountRunner - Loan interest rate discounts calculator
+
+DiscountRunner is a program that uses Python to calculate loan repayments and interest rate discounts intuitively and insightfully. The loan details are encapsulated within a cohesive `Loan` class, which provides a structured framework for input, analysis, and visualization of repayment scenarios. The program also employs external libraries such as `tabulate` for table formatting, ensuring accuracy and clarity in presenting financial data. The program's core functionality lies in its ability to dynamically recalculate loan scenarios based on user-defined discounts, showing the impact of these discounts in the form of interest savings.
