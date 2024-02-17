@@ -29,7 +29,7 @@ class Loan:
         self.initial_interest_total = sum(entry['interest'] for entry in self.repayment_schedule)
 
     def __repr__(self):
-        return 'Your repayment amount is: ${repayment}\nAt the end of your loan you\'ll have paid ${total}\nFrom that amount ${interest} is interest.'.format(repayment = self.repayment_amount, total = self.repayment_total, interest = self.interest_total)
+        return 'Your repayment amount is: ${repayment}\nAt the end of your loan you\'ll have paid ${total}\nFrom which ${interest} is interest.'.format(repayment = self.repayment_amount, total = self.repayment_total, interest = self.interest_total)
 
     def print_repayment_schedule(self, schedule):
         headers = [x.capitalize().replace('_', ' ') for x in schedule[0].keys()]
@@ -79,7 +79,7 @@ while True:
 
     ## Loan variables input
 
-    loan_amount = input('Q: How much are you borrowing? (in AUD; min 3000; max 50000)\nA: ')
+    loan_amount = input('Q: How much are you looking to borrow? (in AUD; minimum $3,000; maximum $50,000)\nA: ')
     loan_amount = float(loan_amount)
     if loan_amount < 3000 or loan_amount > 50000:
         raise ValueError('Loan amount is out of acceptable range, it needs to be between 3,000 and 50,000')
@@ -87,7 +87,7 @@ while True:
 
     repayment_frequency = 'monthly' # Currently supporting monthly frequency only
 
-    term_in_months = input('Q: How long do you need to repay the loan? (in months; min 12; max 72)\nA: ')
+    term_in_months = input('Q: How long do you need to repay the loan? (in months; minimum 12; maximum 72)\nA: ')
     term_in_months = int(term_in_months)
     if term_in_months < 12 or term_in_months > 72:
         raise ValueError('Invalid term, it needs to be between 12 and 72 months')
@@ -95,17 +95,17 @@ while True:
 
     number_of_repayments = term_in_months # Currently supporting monthly frequency only
 
-    interest_rate = input('Q: What interest rate are being charged per year? (min 25%; max 50%)\nA: ').strip('%')
+    interest_rate = input('Q: What is the annual interest rate? (minimum 25%; maximum 50%)\nA: ').strip('%')
     interest_rate = float(interest_rate.strip('%')) / 100
     if interest_rate < 0.25 or interest_rate > 0.5:
         raise ValueError('Interest rate is out of acceptable range, it needs to be between 25 and 50% ')
     clear_screen()
 
-    establishment_date = input('Q: When was this loan funded? (dd/mm/yyyy)\nA: ')
+    establishment_date = input('Q: When was this loan funded? (please provide the date in the format dd/mm/yyyy)\nA: ')
     establishment_date = datetime.strptime(establishment_date, '%d/%m/%Y')
     clear_screen()
 
-    first_repayment_date = input('Q: When do you want your first repayment to be? (max 30 days after establishment date; dd/mm/yyyy)\nA: ')
+    first_repayment_date = input('Q: When do you want your first repayment to be? (up to 30 days after funding; dd/mm/yyyy)\nA: ')
     first_repayment_date = datetime.strptime(first_repayment_date, '%d/%m/%Y')
     if (first_repayment_date - establishment_date).days > 30:
         raise ValueError('First repayment date can\'t be after 30 days of funding')
@@ -123,7 +123,7 @@ while True:
 
     print(loan)
     print()
-    if input('Q: Do you want to see your full expected repayment schedule? (y/n)\nA: ').lower() == 'y':
+    if input('Q: Would you like to see your full expected repayment schedule? (y/n)\nA: ').lower() == 'y':
         clear_screen()
         loan.print_repayment_schedule(loan.initial_repayment_schedule)
     clear_screen()
@@ -143,7 +143,7 @@ while True:
         discount_dict['discount'] = discount
         discount_list.append(discount_dict)
         clear_screen()
-        if input('Q: Do you want to add another discount? (y/n)\nA: ').lower() == 'n':
+        if input('Q: Would you like to add another discount? (y/n)\nA: ').lower() == 'n':
             clear_screen()
             break
         clear_screen()
@@ -156,12 +156,12 @@ while True:
 
     print('You will save a total amount of $' + str(discount_impact) + ' with interest discounts.')
     print()
-    if input('Q: Do you want to see your updated repayment schedule? (y/n)\nA: ').lower() == 'y':
+    if input('Q: Would you like to see your updated repayment schedule? (y/n)\nA: ').lower() == 'y':
         clear_screen()
         loan.print_repayment_schedule(loan.repayment_schedule)
     clear_screen()
 
-    if input('Q: Do you want to simulate another scenario? (y/n)\nA: ').lower() != 'y':
+    if input('Q: Would you like to simulate another loan? (y/n)\nA: ').lower() != 'y':
         clear_screen()
         print('Thank you for using DiscountRunner!')
         break ## Program stops
