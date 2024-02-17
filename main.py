@@ -181,5 +181,5 @@ while True:
         print()
         print('Created by Vini Pereira')
         print('github.com/vinipereira-io')
-        break ## Program stops
+        break ## Program stops z
     clear_screen()
