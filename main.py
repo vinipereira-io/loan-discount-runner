@@ -178,5 +178,8 @@ while True:
     if input('Q: Would you like to simulate another loan? (y/n)\nA: ').lower() != 'y':
         clear_screen()
         print('Thank you for using DiscountRunner!')
+        print()
+        print('Created by Vini Pereira')
+        print('github.com/vinipereira-io')
         break ## Program stops
     clear_screen()
